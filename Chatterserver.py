@@ -1,5 +1,12 @@
 import socket
 import threading
+import urllib.request
+
+
+# Someones external service that returns external IP without the use of a library
+external_ip = urllib.request.urlopen('https://ident.me').read().decode('utf8')
+
+print(external_ip)
 
 
 class Server:
@@ -31,17 +38,17 @@ class Server:
         message_left_server = '{} has left the server'.format(host_name)  # A string that holds the default left message
         self.connections.remove(client_connection)  # Removes connection socket from connection list
         client_connection.close()  # Closes the connection socket
-        self.send_to_all(bytes(message_left_server, 'utf-8'))  # send_to_all, someone left
+        self.send_to_all(bytes(message_left_server, 'utf-8'), client_address)  # send_to_all, someone left
 
     def handler(self, client_connection, client_address):
         try:
             while True:
                 data_info = client_connection.recv(1024)  # Receive a maximum of 1024 bytes of data a thread
-                self.send_to_all(data_info, client_address)
-                if not data_info:
-                    self.disconnect(client_connection, client_address)
-        except ConnectionResetError:
-            self.disconnect(client_connection, client_address)
+                self.send_to_all(bytes(data_info), client_address)  # Sends what is received to all connected
+                if not data_info:  # If no data is received
+                    self.disconnect(client_connection, client_address)  # Run disconnect cleanup
+        except ConnectionResetError:  # If a ConnectionResetError is thrown
+            self.disconnect(client_connection, client_address)   # Run disconnect cleanup
 
     def execute(self):
         # Loop to handle connection
@@ -50,12 +57,12 @@ class Server:
             client_connection, client_address = self.sock.accept()
             # Creates a connection thread
             connection_thread = threading.Thread(target=self.handler, args=(client_connection, client_address))
-            connection_thread.daemon = True
-            connection_thread.start()
-            self.connections.append(client_connection)
-            address = str(client_address[0])
+            connection_thread.daemon = True  # Ensure we can close out of the thread if needed
+            connection_thread.start()  # Runs the thread
+            self.connections.append(client_connection)  # Adds to a list of connections
+            address = str(client_address[0])  # Gets the IP
             message_join_server = "{} has joined the server!".format(address)
-            self.send_to_all(client_connection, bytes(message_join_server, 'utf-8'))
+            self.send_to_all(bytes(message_join_server, 'utf-8'), client_address)
 
 
 print("Chatterserver | Version 0.1 | Server running IPv4, Protocol TCP")
