@@ -35,7 +35,7 @@ class Client:
 
 
 try:
-    print("mushyCli | Version 0.1")
+    print("Chatterclient | Version 0.1")
     client = Client('192.168.1.11', 10000)
     client.send_msg()
 except socket.error:
