@@ -48,7 +48,9 @@ class Server:
                 if not data_info:  # If no data is received
                     self.disconnect(client_connection, client_address)  # Run disconnect cleanup
         except ConnectionResetError:  # If a ConnectionResetError is thrown
-            self.disconnect(client_connection, client_address)   # Run disconnect cleanup
+            pass  # Log ConnectionResetError
+        finally:
+            self.disconnect(client_connection, client_address)  # Run cleanup
 
     def execute(self):
         # Loop to handle connection
@@ -71,6 +73,5 @@ try:
     server.execute()
 except ValueError or TypeError:
     print("Incorrect values entered. Server hostname must be in format x.x.x.x, server port must be in format 00000.")
-    print("")
 except socket.error:
     print("Ensure your port/address is valid.")
