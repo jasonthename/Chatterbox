@@ -1,6 +1,7 @@
 import socket
 import threading
 import urllib.request
+import random
 
 
 # Someones external service that returns external IP without the use of a library
@@ -14,8 +15,11 @@ class Server:
     # Passing two parameters to a socket method - 1st - IPV4 Connection, and 2nd - TCP protocol (SOCK_STREAM)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # A list which would include all connections
+    # A list of connections
     connections = []
+
+    # A list of nicknames
+    nicknames = {}
 
     def __init__(self, host_ip, host_port):
         # Bind socket to an address and port
@@ -24,14 +28,28 @@ class Server:
         # Listen to a port, 5 is the recommended max
         self.sock.listen(1)
 
+    def get_nick(self, ip):
+        return self.nicknames.get(ip, "Guest")
+
+    def add_name(self, ip, name):
+        self.nicknames[ip] = name
+
     # Send msg to all connections in list - two parameters, a Socket object (socket.accept(c, a) and the data to be sent
     def send_to_all(self, d, a):
         # Loops through all connections (socket that can send/recv data)
         for i in self.connections:
-            host_name = str(a[0]).replace("'", "")  # IP Address w/o List format
-            i.send(bytes(d))  # Send to all connections the received input
-            received = d.decode('utf-8')  # Decodes parameter d - received input
-            print(f'{[host_name]}: {received}')  # Prints all the received input in [IP]: Message format
+            decoded = d.decode('utf-8')
+            if decoded.startswith("PRIVMSG"):
+                host_name = self.get_nick(a).replace("'", "")
+                raw_msg = decoded[8:]
+                message = f"[{host_name}] {raw_msg}".encode('utf-8')
+                i.send(bytes(message))  # Send to all connections the received input
+                print(message.decode('utf-8'))
+            elif decoded.startswith("NICK"):
+                name = decoded[5:]
+                self.add_name(a, name)
+                on_join = f">> {self.get_nick(a)} has joined the server".encode('utf-8')
+                i.send(bytes(on_join))
 
     def disconnect(self, client_connection, client_address):
         host_name = str(client_address[0]).replace("'", "")  # IP Address w/o List format
@@ -53,6 +71,7 @@ class Server:
             self.disconnect(client_connection, client_address)  # Run cleanup
 
     def execute(self):
+        print("Listening for connections..")
         # Loop to handle connection
         while True:
             # Accepts the connection through the socket
@@ -62,9 +81,8 @@ class Server:
             connection_thread.daemon = True  # Ensure we can close out of the thread if needed
             connection_thread.start()  # Runs the thread
             self.connections.append(client_connection)  # Adds to a list of connections
-            address = str(client_address[0])  # Gets the IP
-            message_join_server = "{} has joined the server!".format(address)
-            self.send_to_all(bytes(message_join_server, 'utf-8'), client_address)
+            self.nicknames[client_address] = ""
+            print("Incoming connection from " + str(client_address))
 
 
 print("Chatterserver | Version 0.1 | Server running IPv4, Protocol TCP")

@@ -19,16 +19,20 @@ class Client:
         self.sock.close()
         self.sock.shutdown()
 
+    def enter_name(self):
+        name = input("What would you like to be called? ")
+        self.sock.send(bytes("NICK " + name, 'utf-8'))
+
     def send_msg(self):
+        self.enter_name()
         while True:
-            self.sock.send(bytes(input("\n> "), 'utf-8'))
+            self.sock.send(bytes("PRIVMSG " + input("> "), 'utf-8'))
 
     def listen(self):
         while True:
             response = self.sock.recv(1024)
-            host_name = str(self.sock.getsockname()[0]).replace("'", "")
             response_decoded = response.decode('utf-8')
-            print(f'[{host_name}]: {response_decoded}\n')
+            print(response_decoded)
             if not response:
                 print("No information is being recevied..")
                 break
