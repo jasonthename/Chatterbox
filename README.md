@@ -1,2 +1,2 @@
 # Chatterbox
-An IRC developed in Python.
+A python-powered messaging service.
