@@ -32,7 +32,7 @@ class Server:
     def listen(self, data, address):
         decoded = data.decode('utf-8')
         host_name = str(address[0]).replace("'", "")
-        if decoded.startswith("PRIVMSG"):
+        if decoded.startswith("PUBMSG"):
             formatted_message = f"[{self.get_nick(address)}] {decoded[8:]}"
             self.send_message_all(formatted_message)
             print(formatted_message)

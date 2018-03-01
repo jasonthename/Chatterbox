@@ -28,16 +28,15 @@ class Client:
     def send_msg(self):
         self.enter_name()
         while True:
-            self.sock.send(bytes("PRIVMSG " + input("> "), 'utf-8'))
+            self.sock.send(bytes("PUBMSG " + input("> "), 'utf-8'))
 
     def listen(self):
-        print('Listening to {}'.format(str(self.sock.getsockname())))
         while True:
             response = self.sock.recv(1024)
             response_decoded = response.decode('utf-8')
             print("\n" + response_decoded)
             if not response:
-                print("No information is being recevied..")
+                print("No information is being received..")
                 break
 
 
