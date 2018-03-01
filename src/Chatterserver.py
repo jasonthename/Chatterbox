@@ -16,6 +16,7 @@ class Server:
     def __init__(self, host_ip, host_port):
         # Bind socket to an address and port
         self.sock.bind((host_ip, host_port))
+        print("Hosted on {}:{}".format(host_ip, host_port))
 
         # Listen to a port, 5 is the recommended max
         self.sock.listen(1)
@@ -33,7 +34,7 @@ class Server:
         decoded = data.decode('utf-8')
         host_name = str(address[0]).replace("'", "")
         if decoded.startswith("PUBMSG"):
-            formatted_message = f"[{self.get_nick(address)}] {decoded[8:]}"
+            formatted_message = f"[{self.get_nick(address)}] {decoded[7:]}"
             self.send_message_all(formatted_message)
             print(formatted_message)
         elif decoded.startswith("NICK"):
@@ -42,7 +43,7 @@ class Server:
             self.send_message_all(on_join)
             print(f"{host_name} has changed nickname to {self.get_nick(address)}")
         else:
-            print("Unsupported client! Please use Chatterclient.")
+            print("Unsupported client detected from " + str(address))
 
     # Sends message to all clients in connections[]
     def send_message_all(self, message):
@@ -84,7 +85,7 @@ class Server:
             print("Incoming connection from " + str(client_address))
 
 
-print("Chatterbox | Server | Server running IPv4, Protocol TCP")
+print("Chatterbox | Server")
 try:
     server = Server(str(input("IP: ")), int(input("Port: ")))
     server.execute()
